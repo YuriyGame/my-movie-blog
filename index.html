@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Посмотрел и Одобряю — Киносервис</title>
+    
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+    <link href="https://unpkg.com" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #2d3436;
+            --accent: #6c63ff;
+            --gold: #f1c40f;
+            --shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #a29bfe; --shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
+        
+        header { background: var(--card); padding: 1.5rem; text-align: center; box-shadow: var(--shadow); sticky; top: 0; z-index: 1000; }
+        .nav-btns { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
+
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+
+        /* Карточка фильма */
+        .card { background: var(--card); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); position: relative; transition: 0.3s; }
+        .card:hover { transform: translateY(-10px); }
+
+        .poster { width: 100%; height: 220px; object-fit: cover; }
+        .badge { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; }
+        
+        .bookmark-btn { position: absolute; top: 15px; right: 15px; background: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s; }
+        .bookmark-btn.active { background: var(--accent); color: white; }
+
+        .card-content { padding: 20px; }
+        .approval-container { margin: 15px 0; }
+        .progress-bg { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; }
+        .progress-fill { background: var(--accent); height: 100%; width: 0; transition: width 1.5s cubic-bezier(0.1, 0, 0.2, 1); }
+
+        .btn { padding: 10px 20px; border-radius: 25px; border: none; cursor: pointer; background: var(--accent); color: white; font-weight: 600; transition: 0.3s; }
+        
+        /* Секция комментариев */
+        #comments-section { max-width: 800px; margin: 4rem auto; padding: 2rem; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 style="font-family: 'Montserrat'; color: var(--accent); margin: 0;">Посмотрел и Одобряю</h1>
+    <div class="nav-btns">
+        <button class="btn" onclick="showAll()">Все рецензии</button>
+        <button class="btn" style="background:#e67e22" onclick="showWatchlist()">Мой список (⭐)</button>
+        <button class="btn" style="background:var(--text); color:var(--bg)" onclick="toggleTheme()">🌓 Тема</button>
+    </div>
+</header>
+
+<div class="container" id="main-grid"></div>
+
+<div id="comments-section">
+    <h3>Обсуждение проекта</h3>
+    <div id="disqus_thread"></div>
+</div>
+
+<script src="https://unpkg.com"></script>
+<script>
+    const REVIEWS = [
+        { id: 1, title: "Дюна 2", approval: 95, genre: "Фантастика", img: "https://images.unsplash.com", text: "Визуальное совершенство." },
+        { id: 2, title: "Бедные-несчастные", approval: 88, genre: "Драма", img: "https://images.unsplash.com", text: "Странно, красиво, смело." },
+        { id: 3, title: "Оппенгеймер", approval: 92, genre: "Байопик", img: "https://images.unsplash.com", text: "Лучший звук десятилетия." }
+    ];
+
+    let watchlist = JSON.parse(localStorage.getItem('watchlist')) || [];
+
+    function render(data) {
+        const grid = document.getElementById('main-grid');
+        grid.innerHTML = '';
+        
+        data.forEach(item => {
+            const isBookmarked = watchlist.includes(item.id);
+            grid.innerHTML += `
+                <div class="card" data-aos="fade-up">
+                    <span class="badge">👍 ${item.approval}%</span>
+                    <button class="bookmark-btn ${isBookmarked ? 'active' : ''}" onclick="toggleWatchlist(${item.id})">
+                        ${isBookmarked ? '★' : '☆'}
+                    </button>
+                    <img src="${item.img}" class="poster">
+                    <div class="card-content">
+                        <small style="color:var(--accent)">${item.genre}</small>
+                        <h2 style="margin:5px 0">${item.title}</h2>
+                        <div class="approval-container">
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px">
+                                <span>Одобрение</span><span>${item.approval}%</span>
+                            </div>
+                            <div class="progress-bg">
+                                <div class="progress-fill" data-percent="${item.approval}"></div>
+                            </div>
+                        </div>
+                        <p style="font-size:0.9rem">${item.text}</p>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Запуск анимации шкал после рендера
+        setTimeout(() => {
+            document.querySelectorAll('.progress-fill').forEach(el => {
+                el.style.width = el.dataset.percent + '%';
+            });
+        }, 100);
+    }
+
+    function toggleWatchlist(id) {
+        if (watchlist.includes(id)) {
+            watchlist = watchlist.filter(item => item !== id);
+        } else {
+            watchlist.push(id);
+        }
+        localStorage.setItem('watchlist', JSON.stringify(watchlist));
+        render(REVIEWS); // Перерисовываем, чтобы обновить иконки
+    }
+
+    function showWatchlist() {
+        const data = REVIEWS.filter(r => watchlist.includes(r.id));
+        render(data.length ? data : []);
+        if(!data.length) document.getElementById('main-grid').innerHTML = "<h3>Ваш список пока пуст 🍿</h3>";
+    }
+
+    function showAll() { render(REVIEWS); }
+
+    function toggleTheme() {
+        document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    }
+
+    // Инициализация Disqus
+    var disqus_config = function () {
+        this.page.url = window.location.href;  
+        this.page.identifier = 'movie_blog_main'; 
+    };
+    (function() { 
+        var d = document, s = d.createElement('script');
+        s.src = 'https://YOUR_DISQUS_://shortname.disqus.com'; // ЗАМЕНИТЕ НА ВАШ SHORTNAME
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+
+    AOS.init();
+    render(REVIEWS);
+</script>
+
+</body>
+</html>

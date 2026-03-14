@@ -3,156 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Посмотрел и Одобряю — Киносервис</title>
+    <title>Посмотрел и Одобряю — Фикс интерфейса</title>
     
     <link href="https://fonts.googleapis.com" rel="stylesheet">
     <link href="https://unpkg.com" rel="stylesheet">
     
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         :root {
-            --bg: #f8f9fa;
-            --card: #ffffff;
-            --text: #2d3436;
-            --accent: #6c63ff;
-            --gold: #f1c40f;
-            --shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --bg: #ffffff; --card: #ffffff; --text: #1a1a1a; 
+            --accent-purple: #6c63ff; --gold: linear-gradient(90deg, #d4af37, #f9f295, #d4af37);
+            --blue: #3498db; --shadow: 0 0.5rem 2rem rgba(0,0,0,0.08);
         }
-
         [data-theme="dark"] {
-            --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #a29bfe; --shadow: 0 10px 30px rgba(0,0,0,0.4);
+            --bg: #0d0d0d; --card: #1a1a1a; --text: #f1f1f1; --shadow: 0 0.5rem 2rem rgba(0,0,0,0.4);
         }
 
-        body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
+
+        /* ВЕРХНЯЯ ПАНЕЛЬ — теперь кнопки не улетят за экран */
+        .nav-fixed-container {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 1.5rem; z-index: 2000;
+            pointer-events: none; /* Чтобы контейнер не мешал кликать по логотипу */
+        }
         
-        header { background: var(--card); padding: 1.5rem; text-align: center; box-shadow: var(--shadow); sticky; top: 0; z-index: 1000; }
-        .nav-btns { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
+        .nav-wrapper {
+            max-width: 85rem; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
 
-        .container { max-width: 1100px; margin: 2rem auto; padding: 0 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+        .top-btn {
+            pointer-events: auto; /* Возвращаем кликабельность кнопкам */
+            padding: 0.8rem 1.3rem; border-radius: 0.9rem; border: none;
+            cursor: pointer; font-weight: 600; transition: 0.3s;
+            display: flex; align-items: center; gap: 0.5rem;
+            box-shadow: var(--shadow); font-size: 0.9rem; white-space: nowrap;
+        }
 
-        /* Карточка фильма */
-        .card { background: var(--card); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); position: relative; transition: 0.3s; }
-        .card:hover { transform: translateY(-10px); }
+        .btn-watchlist-toggle { background: var(--blue); color: white; }
+        .right-group { display: flex; gap: 0.8rem; }
+        .btn-home { background: #f1c40f; color: #000; }
+        .btn-theme { background: var(--text); color: var(--bg); border: 1px solid rgba(128,128,128,0.2); }
+        .top-btn:hover { transform: translateY(-3px); box-shadow: 0 0.8rem 1.5rem rgba(0,0,0,0.15); }
 
-        .poster { width: 100%; height: 220px; object-fit: cover; }
-        .badge { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.7); color: white; padding: 5px 12px; border-radius: 8px; font-weight: bold; }
+        /* КОНТЕНТ */
+        header { padding: 8rem 1.5rem 3rem; text-align: center; }
+        .logo { font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 900; color: var(--accent-purple); letter-spacing: -0.15rem; margin: 0; cursor: pointer; }
         
-        .bookmark-btn { position: absolute; top: 15px; right: 15px; background: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s; }
-        .bookmark-btn.active { background: var(--accent); color: white; }
+        .controls { max-width: 45rem; margin: 2rem auto 0; display: flex; flex-direction: column; gap: 1.5rem; align-items: center; }
+        #searchInput { 
+            width: 100%; max-width: 28rem; padding: 1.1rem 2.2rem; border-radius: 4rem; border: 1px solid rgba(128,128,128,0.2);
+            background: var(--card); color: var(--text); outline: none; box-shadow: var(--shadow); font-size: 1rem;
+        }
 
-        .card-content { padding: 20px; }
-        .approval-container { margin: 15px 0; }
-        .progress-bg { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; }
-        .progress-fill { background: var(--accent); height: 100%; width: 0; transition: width 1.5s cubic-bezier(0.1, 0, 0.2, 1); }
+        .genre-box { display: flex; gap: 0.7rem; flex-wrap: wrap; justify-content: center; }
+        .btn-genre {
+            padding: 0.6rem 1.3rem; border-radius: 2rem; border: 1px solid var(--accent-purple);
+            background: transparent; color: var(--accent-purple); cursor: pointer; font-weight: 600; transition: 0.3s; font-size: 0.9rem;
+        }
+        .btn-genre.active { background: var(--accent-purple); color: white; }
 
-        .btn { padding: 10px 20px; border-radius: 25px; border: none; cursor: pointer; background: var(--accent); color: white; font-weight: 600; transition: 0.3s; }
+        .container { 
+            max-width: 80rem; margin: 4rem auto 8rem; padding: 0 1.5rem; 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 3rem; 
+        }
+
+        .card { 
+            background: var(--card); border-radius: 1.5rem; overflow: hidden; 
+            box-shadow: var(--shadow); cursor: pointer; position: relative;
+            transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 0.4rem; background: var(--gold); z-index: 10; }
+        .card:hover { transform: translateY(-1rem); }
+
+        .poster-box { height: 25rem; overflow: hidden; position: relative; background: #eee; }
+        .poster-img { width: 100%; height: 100%; object-fit: cover; transition: 1s; }
         
-        /* Секция комментариев */
-        #comments-section { max-width: 800px; margin: 4rem auto; padding: 2rem; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); }
+        .quick-fav {
+            position: absolute; top: 1.2rem; right: 1.2rem; width: 3rem; height: 3rem;
+            background: rgba(255,255,255,0.95); border: none; border-radius: 50%;
+            font-size: 1.3rem; cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0.4rem 0.8rem rgba(0,0,0,0.15); transition: 0.3s;
+        }
+        .quick-fav.active { background: #f1c40f; color: white; }
+
+        .card-body { padding: 2rem; }
+        .cast-info { font-size: 0.8rem; font-weight: 700; color: #000; text-transform: uppercase; margin-bottom: 0.8rem; display: block; opacity: 0.8; }
+        [data-theme="dark"] .cast-info { color: #fff; }
+        .card-title { font-size: 1.8rem; font-weight: 900; font-family: 'Playfair Display', serif; margin: 0.5rem 0; color: var(--text); line-height: 1.2; }
+
+        /* МОДАЛКА */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 3000; display: none; overflow-y: auto; padding: 5rem 1.5rem;
+        }
+        .modal-content { max-width: 55rem; margin: 0 auto; animation: slideUp 0.5s ease; }
+        .close-modal { position: fixed; top: 1.5rem; right: 2rem; font-size: 3.5rem; cursor: pointer; color: var(--accent-purple); z-index: 3100; }
+
+        @media (max-width: 600px) {
+            .nav-wrapper { flex-direction: column; gap: 1rem; align-items: center; }
+            header { padding-top: 10rem; }
+            .logo { font-size: 2.5rem; }
+        }
     </style>
 </head>
 <body>
 
+<div class="nav-fixed-container">
+    <div class="nav-wrapper">
+        <button class="top-btn btn-watchlist-toggle" onclick="toggleWatchlistMode()">⭐ Мой список</button>
+        <div class="right-group">
+            <button class="top-btn btn-home" onclick="goHome()">🏠 Домой</button>
+            <button class="top-btn btn-theme" onclick="toggleTheme()">🌓 Тема</button>
+        </div>
+    </div>
+</div>
+
 <header>
-    <h1 style="font-family: 'Montserrat'; color: var(--accent); margin: 0;">Посмотрел и Одобряю</h1>
-    <div class="nav-btns">
-        <button class="btn" onclick="showAll()">Все рецензии</button>
-        <button class="btn" style="background:#e67e22" onclick="showWatchlist()">Мой список (⭐)</button>
-        <button class="btn" style="background:var(--text); color:var(--bg)" onclick="toggleTheme()">🌓 Тема</button>
+    <h1 class="logo" onclick="goHome()">Посмотрел и Одобряю</h1>
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Поиск фильма..." oninput="applyFilters()">
+        <div class="genre-box">
+            <button class="btn-genre active" onclick="setGenre('Все', this)">Все</button>
+            <button class="btn-genre" onclick="setGenre('Фантастика', this)">Фантастика</button>
+            <button class="btn-genre" onclick="setGenre('Драма', this)">Драма</button>
+            <button class="btn-genre" onclick="setGenre('Боевик', this)">Боевик</button>
+        </div>
     </div>
 </header>
 
-<div class="container" id="main-grid"></div>
+<div class="container" id="movieGrid"></div>
 
-<div id="comments-section">
-    <h3>Обсуждение проекта</h3>
-    <div id="disqus_thread"></div>
+<div id="movieModal" class="modal">
+    <span class="close-modal" onclick="closeModal()">×</span>
+    <div class="modal-content" id="modalBody"></div>
 </div>
 
 <script src="https://unpkg.com"></script>
 <script>
-    const REVIEWS = [
-        { id: 1, title: "Дюна 2", approval: 95, genre: "Фантастика", img: "https://images.unsplash.com", text: "Визуальное совершенство." },
-        { id: 2, title: "Бедные-несчастные", approval: 88, genre: "Драма", img: "https://images.unsplash.com", text: "Странно, красиво, смело." },
-        { id: 3, title: "Оппенгеймер", approval: 92, genre: "Байопик", img: "https://images.unsplash.com", text: "Лучший звук десятилетия." }
+    const MOVIES = [
+        { id: 1, title: "Интерстеллар", genre: "Фантастика", cast: "Мэттью Макконахи", short: "Эпическое путешествие за пределы галактики.", full: "Интерстеллар — это визуальный триумф Нолана о времени, любви и выживании человечества.", approval: 98, img: "https://images.unsplash.com" },
+        { id: 2, title: "Зеленая миля", genre: "Драма", cast: "Том Хэнкс", short: "История о чуде в тюрьме для смертников.", full: "Глубокая философская драма, которая не оставит равнодушным ни одного зрителя.", approval: 99, img: "https://images.unsplash.com" },
+        { id: 3, title: "Безумный Макс", genre: "Боевик", cast: "Том Харди", short: "Яростная погоня в постапокалипсисе.", full: "Чистый адреналин. Один из лучших экшн-фильмов современности с невероятными эффектами.", approval: 95, img: "https://images.unsplash.com" }
     ];
 
-    let watchlist = JSON.parse(localStorage.getItem('watchlist')) || [];
+    let currentGenre = 'Все', watchlist = JSON.parse(localStorage.getItem('userWatchlist')) || [], showOnlyWatchlist = false, isSorted = false;
 
     function render(data) {
-        const grid = document.getElementById('main-grid');
-        grid.innerHTML = '';
-        
-        data.forEach(item => {
-            const isBookmarked = watchlist.includes(item.id);
+        const grid = document.getElementById('movieGrid');
+        grid.innerHTML = data.length ? '' : '<h2 style="grid-column:1/-1; text-align:center; opacity:0.5; margin-top:5rem;">Ничего не найдено 🍿</h2>';
+        data.forEach(movie => {
+            const isFav = watchlist.includes(movie.id);
             grid.innerHTML += `
-                <div class="card" data-aos="fade-up">
-                    <span class="badge">👍 ${item.approval}%</span>
-                    <button class="bookmark-btn ${isBookmarked ? 'active' : ''}" onclick="toggleWatchlist(${item.id})">
-                        ${isBookmarked ? '★' : '☆'}
-                    </button>
-                    <img src="${item.img}" class="poster">
-                    <div class="card-content">
-                        <small style="color:var(--accent)">${item.genre}</small>
-                        <h2 style="margin:5px 0">${item.title}</h2>
-                        <div class="approval-container">
-                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px">
-                                <span>Одобрение</span><span>${item.approval}%</span>
-                            </div>
-                            <div class="progress-bg">
-                                <div class="progress-fill" data-percent="${item.approval}"></div>
-                            </div>
-                        </div>
-                        <p style="font-size:0.9rem">${item.text}</p>
+                <div class="card" data-aos="fade-up" onclick="openModal(${movie.id})">
+                    <button class="quick-fav ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleWatchlist(${movie.id})">★</button>
+                    <div class="poster-box"><img src="${movie.img}" class="poster-img"></div>
+                    <div class="card-body">
+                        <span class="cast-info">В РОЛЯХ: ${movie.cast}</span>
+                        <h2 class="card-title">${movie.title}</h2>
+                        <p style="font-size:0.95rem; opacity:0.7;">${movie.short}</p>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
-
-        // Запуск анимации шкал после рендера
-        setTimeout(() => {
-            document.querySelectorAll('.progress-fill').forEach(el => {
-                el.style.width = el.dataset.percent + '%';
-            });
-        }, 100);
     }
 
-    function toggleWatchlist(id) {
-        if (watchlist.includes(id)) {
-            watchlist = watchlist.filter(item => item !== id);
-        } else {
-            watchlist.push(id);
-        }
-        localStorage.setItem('watchlist', JSON.stringify(watchlist));
-        render(REVIEWS); // Перерисовываем, чтобы обновить иконки
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        let filtered = MOVIES.filter(m => m.title.toLowerCase().includes(search) && (currentGenre === 'Все' || m.genre === currentGenre) && (!showOnlyWatchlist || watchlist.includes(m.id)));
+        if (isSorted) filtered.sort((a, b) => a.title.localeCompare(b.title));
+        render(filtered);
     }
 
-    function showWatchlist() {
-        const data = REVIEWS.filter(r => watchlist.includes(r.id));
-        render(data.length ? data : []);
-        if(!data.length) document.getElementById('main-grid').innerHTML = "<h3>Ваш список пока пуст 🍿</h3>";
+    function goHome() { isSorted = !isSorted; currentGenre = 'Все'; showOnlyWatchlist = false; applyFilters(); window.scrollTo(0,0); }
+    function setGenre(g, b) { currentGenre = g; document.querySelectorAll('.btn-genre').forEach(x => x.classList.remove('active')); b.classList.add('active'); applyFilters(); }
+    function toggleWatchlist(id) { watchlist.includes(id) ? watchlist = watchlist.filter(x => x !== id) : watchlist.push(id); localStorage.setItem('userWatchlist', JSON.stringify(watchlist)); applyFilters(); }
+    function toggleWatchlistMode() { showOnlyWatchlist = !showOnlyWatchlist; applyFilters(); }
+    function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+    function openModal(id) {
+        const m = MOVIES.find(x => x.id === id);
+        document.getElementById('modalBody').innerHTML = `<img src="${m.img}" style="width:100%; border-radius:1.5rem; margin-bottom:2rem;"><h1>${m.title}</h1><p style="font-size:1.3rem; margin-top:2rem; line-height:1.8;">${m.full}</p>`;
+        document.getElementById('movieModal').style.display = 'block'; document.body.style.overflow = 'hidden';
     }
+    function closeModal() { document.getElementById('movieModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
-    function showAll() { render(REVIEWS); }
-
-    function toggleTheme() {
-        document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-    }
-
-    // Инициализация Disqus
-    var disqus_config = function () {
-        this.page.url = window.location.href;  
-        this.page.identifier = 'movie_blog_main'; 
-    };
-    (function() { 
-        var d = document, s = d.createElement('script');
-        s.src = 'https://YOUR_DISQUS_://shortname.disqus.com'; // ЗАМЕНИТЕ НА ВАШ SHORTNAME
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-
-    AOS.init();
-    render(REVIEWS);
+    AOS.init({ duration: 800, once: true });
+    render(MOVIES);
 </script>
-
 </body>
 </html>
